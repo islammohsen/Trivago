@@ -347,7 +347,7 @@ namespace Trivago.Front_End
             popup.Owner = GetAdminWindow();
             popup.ShowDialog();
         }
-
+        
         public static void CreateUpdateOfferPopupWindow(Offer offer)
         {
             Window popup = new Window
@@ -1043,6 +1043,329 @@ namespace Trivago.Front_End
             else
             {
                 MessageBox.Show("Invalid view");
+            }
+        }
+
+        public static void CreateAddhotelPopupWindow()
+        {
+            double windowWidth = 500;
+
+            Window popup = new Window
+            {
+                Width = windowWidth,
+                Height = 500,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Title = "Add Hotel"
+            };
+
+            Grid dataGrid = new Grid
+            {
+                Width = windowWidth,
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Auto },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto },
+                },
+                Margin = new Thickness(20, 0.2 * windowWidth, 0, 0)
+            };
+            popup.Content = dataGrid;
+           
+            Label hotelNameLabel = new Label
+            {
+                Content = "Hotel Name : ",
+                FontSize = 22
+            };
+            Grid.SetColumn(hotelNameLabel, 0);
+            Grid.SetRow(hotelNameLabel, 0);
+            dataGrid.Children.Add(hotelNameLabel);
+
+            TextBox hotelNameTextBox = new TextBox
+            {
+                FontSize = 22,
+                Width = 200
+            };
+            Grid.SetRow(hotelNameTextBox, 0);
+            Grid.SetColumn(hotelNameTextBox, 1);
+            dataGrid.Children.Add(hotelNameTextBox);
+
+            Label licenseNumberLabel = new Label
+            {
+                Content = "License Number : ",
+                FontSize = 22,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(licenseNumberLabel, 1);
+            Grid.SetColumn(licenseNumberLabel, 0);
+            dataGrid.Children.Add(licenseNumberLabel);
+
+            TextBox licenseNumberTextBox = new TextBox
+            {
+                FontSize = 22,
+                Width = 200,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(licenseNumberTextBox, 1);
+            Grid.SetColumn(licenseNumberTextBox, 1);
+            dataGrid.Children.Add(licenseNumberTextBox);
+
+            Label locationLabel = new Label
+            {
+                Content = "Location : ",
+                FontSize = 22,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(locationLabel, 2);
+            Grid.SetColumn(locationLabel, 0);
+            dataGrid.Children.Add(locationLabel);
+
+            ComboBox locationComboBox = new ComboBox
+            {
+                Width = 200,
+                Margin = new Thickness(0, 10, 0, 0),
+                FontSize = 22
+            };
+            Grid.SetRow(locationComboBox, 2);
+            Grid.SetColumn(locationComboBox, 1);
+            List<Location> locations = DataModels.GetInstance().GetAllLocations();
+            foreach(Location location in locations)
+            {
+                ComboBoxItem comboBoxItem = new ComboBoxItem
+                {
+                    FontSize = 22,
+                    Content = location
+                };
+                locationComboBox.Items.Add(comboBoxItem);
+            }
+            if (locationComboBox.Items.Count > 0)
+                locationComboBox.SelectedIndex = 0;
+            dataGrid.Children.Add(locationComboBox);
+
+            Label imageLabel = new Label
+            {
+                Content = "Image : ",
+                FontSize = 22,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(imageLabel, 3);
+            Grid.SetColumn(imageLabel, 0);
+            dataGrid.Children.Add(imageLabel);
+
+            Button browseButton = CreateButton(80, 40, "Browse");
+            browseButton.Tag = "";
+            browseButton.Click += HotelAddBrowseButton_Click;
+            browseButton.Margin = new Thickness(0, 10, 0, 0);
+            Grid.SetRow(browseButton, 3);
+            Grid.SetColumn(browseButton, 1);
+            dataGrid.Children.Add(browseButton);
+
+            Button addButton = CreateButton(80, 40, "Add");
+            addButton.Margin = new Thickness(0, 20, 0, 0);
+            addButton.HorizontalAlignment = HorizontalAlignment.Center;
+            addButton.Tag = new List<object>();
+            ((List<object>)addButton.Tag).Add(hotelNameTextBox);
+            ((List<object>)addButton.Tag).Add(licenseNumberTextBox);
+            ((List<object>)addButton.Tag).Add(locationComboBox);
+            ((List<object>)addButton.Tag).Add(browseButton);
+            ((List<object>)addButton.Tag).Add(popup);
+            addButton.Click += AddHotelButton_Click;
+            Grid.SetColumnSpan(addButton, 2);
+            Grid.SetRow(addButton, 4);
+            dataGrid.Children.Add(addButton);
+
+            popup.ShowDialog();
+        }
+
+        private static void AddHotelButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button addButton = (Button)sender;
+            List<object> objects = (List<object>)addButton.Tag;
+            TextBox hotelNameTextBox = (TextBox)objects[0];
+            TextBox licenseNumberTextBox = (TextBox)objects[1];
+            ComboBox locationComboBox = (ComboBox)objects[2];
+            Button browseButton = (Button)objects[3];
+            Window popup = (Window)objects[4];
+
+            int licenseNumber;
+            if (!int.TryParse(licenseNumberTextBox.Text, out licenseNumber))
+            {
+                MessageBox.Show("Enter valid licence number");
+                return;
+            }
+
+            if(hotelNameTextBox.Text == "")
+            {
+                MessageBox.Show("Enter Hotel Name");
+                return;
+            }
+
+            if((string)browseButton.Tag == "")
+            {
+                MessageBox.Show("select a photo");
+                return;
+            }
+            
+            if(locationComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("select a location");
+                return;
+            }
+
+            Hotel hotel = new Hotel(licenseNumber, hotelNameTextBox.Text, new CustomImage((string)browseButton.Tag), (Location)((ComboBoxItem)locationComboBox.SelectedItem).Content, new List<HotelFacility>(), new List<MealPlan>());
+
+            if(DataModels.GetInstance().AddHotel(hotel))
+            {
+                MessageBox.Show("Added");
+                Admin_window admin_Window = GetAdminWindow();
+                if (admin_Window.currentCanvas != null)
+                    admin_Window.currentCanvas.Hide();
+                admin_Window.InitializeHotelsCanvas(DataModels.GetInstance().GetAllHotels());
+                popup.Close();
+            }
+            else
+            {
+                MessageBox.Show("error 404");
+            }
+        }
+
+        private static void HotelAddBrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = "JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif|PNG Files (*.png)|*.png",
+                Title = "Select Hotel Photo"
+            };
+            dlg.ShowDialog();
+            ((Button)sender).Tag = dlg.FileName;
+        }
+
+        public static void CreateAddMealPlanPopupWindow(Hotel hotel, ListBox listBox)
+        {
+            double windowWidth = 350;
+
+            Window popup = new Window
+            {
+                Width = windowWidth,
+                Height = 500,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Title = "Add Meal Plan"
+            };
+            
+            Grid dataGrid = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Auto },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto },
+                    new RowDefinition { Height = GridLength.Auto }
+                },
+                Margin = new Thickness(20, 0.3 * windowWidth, 0, 0)
+            };
+            popup.Content = dataGrid;
+
+            Label mealPlanNameLabel = new Label
+            {
+                Content = "Name : ",
+                FontSize = 22
+            };
+            Grid.SetRow(mealPlanNameLabel, 0);
+            Grid.SetColumn(mealPlanNameLabel, 0);
+            dataGrid.Children.Add(mealPlanNameLabel);
+
+            TextBox mealPlanNameTextBox = new TextBox
+            {
+                Width = 200,
+                FontSize = 22
+            };
+            Grid.SetRow(mealPlanNameTextBox, 0);
+            Grid.SetColumn(mealPlanNameTextBox, 1);
+            dataGrid.Children.Add(mealPlanNameTextBox);
+
+            Label priceLabel = new Label
+            {
+                Content = "Price : ",
+                FontSize = 22,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(priceLabel, 1);
+            Grid.SetColumn(priceLabel, 0);
+            dataGrid.Children.Add(priceLabel);
+
+            TextBox priceTextBox = new TextBox
+            {
+                Width = 200,
+                FontSize = 22,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(priceTextBox, 1);
+            Grid.SetColumn(priceTextBox, 1);
+            dataGrid.Children.Add(priceTextBox);
+
+            Button addButton = CreateButton(80, 40, "Add");
+            addButton.Margin = new Thickness(0, 20, 0, 0);
+            addButton.Tag = new List<object>();
+            ((List<object>)addButton.Tag).Add(hotel);
+            ((List<object>)addButton.Tag).Add(listBox);
+            ((List<object>)addButton.Tag).Add(mealPlanNameTextBox);
+            ((List<object>)addButton.Tag).Add(priceTextBox);
+            ((List<object>)addButton.Tag).Add(popup);
+            addButton.Click += MealPlanAddButton_Click;
+            Grid.SetColumnSpan(addButton, 2);
+            Grid.SetRow(addButton, 2);
+            dataGrid.Children.Add(addButton);
+
+            popup.ShowDialog();
+        }
+
+        private static void MealPlanAddButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+            List<object> objects = (List<object>)button.Tag;
+            Hotel hotel = (Hotel)objects[0];
+            ListBox listBox = (ListBox)objects[1];
+            TextBox nameTextBox = (TextBox)objects[2];
+            TextBox priceTextBox = (TextBox)objects[3];
+            Window popup = (Window)objects[4];
+
+            if(nameTextBox.Text == "")
+            {
+                MessageBox.Show("Please Enter MealPlan Name");
+                return;
+            }
+            int price;
+            if(!int.TryParse(priceTextBox.Text, out price))
+            {
+                MessageBox.Show("Enter a valid price");
+                return;
+            }
+            List<MealPlan> mealPlans = new List<MealPlan>();
+            mealPlans.Add(new MealPlan(nameTextBox.Text, price));
+            if(DataModels.GetInstance().AddMealPlans(hotel.licenseNumber, mealPlans))
+            {
+                MessageBox.Show("added");
+                ListBoxItem listBoxItem = new ListBoxItem
+                {
+                    Content = mealPlans[0],
+                    FontSize = 22
+                };
+                listBox.Items.Add(listBoxItem);
+                popup.Close();
+            }
+            else
+            {
+                MessageBox.Show("Error");
             }
         }
     }

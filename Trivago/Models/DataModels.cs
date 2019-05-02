@@ -935,7 +935,7 @@ namespace Trivago.Models
             // Add Hotel
             command.CommandText = @"INSERT INTO Hotel
                                     (License_Number, Hotel_Name, Hotel_Image, City, Country)
-                                    VALUES (:hotelLicense, :hotelName, :hotelImage, :city, :country);";
+                                    VALUES (:hotelLicense, :hotelName, :hotelImage, :city, :country)";
             command.Parameters.Add("hotelLicense", hotel.licenseNumber);
             command.Parameters.Add("hotelName", hotel.name);
             command.Parameters.Add("hotelImage", hotel.image.GetByteImage());
@@ -958,7 +958,7 @@ namespace Trivago.Models
                 return false;
         }
 
-        private bool AddFacilities(int hotelLicenseNumber, List<HotelFacility> facilities)
+        public bool AddFacilities(int hotelLicenseNumber, List<HotelFacility> facilities)
         {
             foreach (HotelFacility facility in facilities)
             {
@@ -968,7 +968,7 @@ namespace Trivago.Models
 
                 command.CommandText = @"INSERT INTO Hotel_Facilities
                                         (License_Number, Facility_Name, Facility_Image)
-                                        VALUES (:hotelNumber, :facilityName, :facilityImage);";
+                                        VALUES (:hotelNumber, :facilityName, :facilityImage)";
                 command.Parameters.Add("hotelNumber", hotelLicenseNumber);
                 command.Parameters.Add("facilityName", facility.name);
                 command.Parameters.Add("facilityImage", facility.image.GetByteImage());
@@ -984,7 +984,7 @@ namespace Trivago.Models
             return true;
         }
 
-        private bool AddMealPlans(int hotelLicenseNumber, List<MealPlan> meals)
+        public bool AddMealPlans(int hotelLicenseNumber, List<MealPlan> meals)
         {
             /// <summary>
             /// Adds hotels meals to database.
@@ -1001,9 +1001,9 @@ namespace Trivago.Models
                 command.Parameters.Add("name", plan.name);
                 command.Parameters.Add("hotelNumber", hotelLicenseNumber);
                 command.Parameters.Add("price", plan.price);
+                    command.ExecuteNonQuery();
                 try
                 {
-                    command.ExecuteNonQuery();
                 }
                 catch (OracleException)
                 {

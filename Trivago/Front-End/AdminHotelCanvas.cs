@@ -64,6 +64,7 @@ namespace Trivago.Front_End
             Button addHotelButton = FrontEndHelper.CreateButton(120, 60, "Add Hotel");
             addHotelButton.HorizontalAlignment = HorizontalAlignment.Right;
             addHotelButton.Margin = new Thickness(0, 20, 0.1 * canvas.Width, 0);
+            addHotelButton.Click += AddHotelButton_Click;
             hotelCardsStackPanel.Children.Add(addHotelButton);
 
             for(int i = 0; i < hotels.Count; i++)
@@ -170,6 +171,9 @@ namespace Trivago.Front_End
 
                 Button addMealPlanButton = FrontEndHelper.CreateButton(160, 40, "Add meal plan");
                 addMealPlanButton.Margin = new Thickness(0.025 * cardWidth, 0, 0, 0);
+                addMealPlanButton.Tag = new List<object>();
+                ((List<object>)addMealPlanButton.Tag).Add(hotel);
+                addMealPlanButton.Click += AddMealPlanButton_Click;
                 Grid.SetColumn(addMealPlanButton, 3);
                 buttonsGrid.Children.Add(addMealPlanButton);
                 
@@ -195,6 +199,7 @@ namespace Trivago.Front_End
                 {
                     Width = cardWidth
                 };
+                ((List<object>)addMealPlanButton.Tag).Add(mealsPlanListBox);
                 MealsPanel.Children.Add(mealsPlanListBox);
 
                 for (int j = 0; j < hotel.mealPlans.Count; j++)
@@ -226,6 +231,20 @@ namespace Trivago.Front_End
             }
         }
 
+        private void AddMealPlanButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+            List<object> objects = (List<object>)button.Tag;
+            Hotel hotel = (Hotel)objects[0];
+            ListBox listBox = (ListBox)objects[1];
+            FrontEndHelper.CreateAddMealPlanPopupWindow(hotel, listBox);
+        }
+
+        private void AddHotelButton_Click(object sender, RoutedEventArgs e)
+        {
+            FrontEndHelper.CreateAddhotelPopupWindow();
+        }
+
         private void AddFacilityPhoto_Click(object sender, RoutedEventArgs e)
         {
             Button addPhotoButton = (Button)sender;
@@ -234,14 +253,33 @@ namespace Trivago.Front_End
             OpenFileDialog dlg = new OpenFileDialog
             {
                 Filter = "JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif|PNG Files (*.png)|*.png",
-                Title = "Select Hotel Photo"
+                Title = "Select Hotel Facility Photo"
             };
             dlg.ShowDialog();
 
-            if (dlg.FileName == "")
+            if (dlg.FileNames.Length == 0)
             {
                 MessageBox.Show("Please select photo");
                 return;
+            }
+
+            List<HotelFacility> facilities = new List<HotelFacility>();
+            foreach(string fileName in dlg.FileNames)
+            {
+                facilities.Add(new HotelFacility(Guid.NewGuid().ToString(), new CustomImage(fileName)));
+            }
+
+            if(DataModels.GetInstance().AddFacilities(hotel.licenseNumber, facilities) == true)
+            {
+                MessageBox.Show("Added");
+                Admin_window admin_Window = FrontEndHelper.GetAdminWindow();
+                if (admin_Window.currentCanvas != null)
+                    admin_Window.currentCanvas.Hide();
+                admin_Window.InitializeHotelsCanvas(DataModels.GetInstance().GetAllHotels());
+            }
+            else
+            {
+                MessageBox.Show("Error");
             }
         }
 
