@@ -174,6 +174,8 @@ namespace Trivago.Front_End
                 Grid.SetColumn(addViewbutton, 2);
                 buttonsGrid.Children.Add(addViewbutton);
                 
+                //todo : delete view button
+
                 Label title = new Label
                 {
                     Content = "Room Views",
@@ -210,11 +212,11 @@ namespace Trivago.Front_End
         private void AddViewbutton_Click(object sender, RoutedEventArgs e)
         {
             Button addViewButton = (Button)sender;
-            List<object> objects = (List<object>)sender;
+            List<object> objects = (List<object>)addViewButton.Tag;
             Room room = (Room)objects[0];
             ListBox viewsList = (ListBox)objects[1];
 
-            //FrontEndHelper.CreateAddRoomViewPopupWindow(room, viewsList);
+            FrontEndHelper.CreateAddRoomViewPopupWindow(room, viewsList);
         }
 
         private void ChangePhotoButton_Click(object sender, RoutedEventArgs e)

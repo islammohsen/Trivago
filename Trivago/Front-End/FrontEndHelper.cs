@@ -254,7 +254,7 @@ namespace Trivago.Front_End
             popup.Owner = GetAdminWindow();
             popup.ShowDialog();
         }
-
+        
         public static void CreateUpdateWebsitePopupWindow(Website website)
         {
 
@@ -953,6 +953,97 @@ namespace Trivago.Front_End
             };
             dlg.ShowDialog();
             ((Button)sender).Tag = dlg.FileName.ToString();
+        }
+
+        public static void CreateAddRoomViewPopupWindow(Room room, ListBox viewsList)
+        {
+            double windowWidth = 400;
+            Window popup = new Window
+            {
+                Width = windowWidth,
+                Height = 500,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Title = "Add View"
+            };
+
+            StackPanel dataStackPanel = new StackPanel
+            {
+                Width = windowWidth
+            };
+            popup.Content = dataStackPanel;
+
+            Grid dataGrid = new Grid
+            {
+                Width = windowWidth,
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Auto},
+                    new ColumnDefinition { Width = GridLength.Auto}
+                }
+            };
+            dataStackPanel.Children.Add(dataGrid);
+
+            Label viewLabel = new Label
+            {
+                Content = "View : ",
+                FontSize = 22
+            };
+            Grid.SetColumn(viewLabel, 0);
+            dataGrid.Children.Add(viewLabel);
+
+            TextBox viewTextBox = new TextBox
+            {
+                FontSize = 22,
+                Width = 200
+            };
+            Grid.SetColumn(viewTextBox, 1);
+            dataGrid.Children.Add(viewTextBox);
+
+            Button addButton = CreateButton(80, 40, "Add");
+            addButton.Margin = new Thickness(0, 20, 0, 0);
+            addButton.Tag = new List<object>();
+            ((List<object>)addButton.Tag).Add(room);
+            ((List<object>)addButton.Tag).Add(viewsList);
+            ((List<object>)addButton.Tag).Add(viewTextBox);
+            ((List<object>)addButton.Tag).Add(popup);
+            addButton.Click += AddButton_Click;
+            dataStackPanel.Children.Add(addButton);
+
+            popup.ShowDialog();
+        }
+
+        private static void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button addViewButton = (Button)sender;
+            List<object> objects = (List<object>)addViewButton.Tag;
+            Room room = (Room)objects[0];
+            ListBox listBox = (ListBox)objects[1];
+            TextBox viewTextBox = (TextBox)objects[2];
+            Window popup = (Window)objects[3];
+
+            if(viewTextBox.Text == "")
+            {
+                MessageBox.Show("Invalid view");
+                return;
+            }
+
+            RoomView roomView = new RoomView(viewTextBox.Text);
+
+            if(DataModels.GetInstance().AddRoomView(room, roomView))
+            {
+                MessageBox.Show("Added");
+                ListBoxItem listBoxItem = new ListBoxItem
+                {
+                    Content = "View : " + roomView.view,
+                    FontSize = 22
+                };
+                listBox.Items.Add(listBoxItem);
+                popup.Close();
+            }
+            else
+            {
+                MessageBox.Show("Invalid view");
+            }
         }
     }
 }
