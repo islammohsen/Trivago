@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -59,6 +60,11 @@ namespace Trivago.Front_End
                 Width = canvas.Width
             };
             scrollViewer.Content = hotelCardsStackPanel;
+
+            Button addHotelButton = FrontEndHelper.CreateButton(120, 60, "Add Hotel");
+            addHotelButton.HorizontalAlignment = HorizontalAlignment.Right;
+            addHotelButton.Margin = new Thickness(0, 20, 0.1 * canvas.Width, 0);
+            hotelCardsStackPanel.Children.Add(addHotelButton);
 
             for(int i = 0; i < hotels.Count; i++)
             {
@@ -134,21 +140,39 @@ namespace Trivago.Front_End
                     ColumnDefinitions =
                     {
                         new ColumnDefinition { Width = GridLength.Auto },
-                        new ColumnDefinition { Width = GridLength.Auto }
+                        new ColumnDefinition { Width = GridLength.Auto },
+                        new ColumnDefinition { Width = GridLength.Auto },
+                        new ColumnDefinition { Width = GridLength.Auto },
                     },
-                    Margin = new Thickness(0.75 * cardWidth, 0, 0, 0)
+                    Margin = new Thickness(0.2 * cardWidth, 0, 0, 0)
                 };
                 cardStackPanel.Children.Add(buttonsGrid);
 
                 Button deleteButton = FrontEndHelper.CreateButton(80, 40, "Delete");
+                deleteButton.Tag = hotel;
+                deleteButton.Click += DeleteButton_Click;
                 Grid.SetColumn(deleteButton, 0);
                 buttonsGrid.Children.Add(deleteButton);
 
-                Button updateButton = FrontEndHelper.CreateButton(80, 40, "Update");
-                updateButton.Margin = new Thickness(0.05 * cardWidth, 0, 0, 0);
-                Grid.SetColumn(updateButton, 1);
-                buttonsGrid.Children.Add(updateButton);
+                Button updatePhotoButton = FrontEndHelper.CreateButton(180, 40, "Update Hotel Photo");
+                updatePhotoButton.Margin = new Thickness(0.025 * cardWidth, 0, 0, 0);
+                updatePhotoButton.Tag = hotel;
+                updatePhotoButton.Click += UpdatePhotoButton_Click;
+                Grid.SetColumn(updatePhotoButton, 1);
+                buttonsGrid.Children.Add(updatePhotoButton);
 
+                Button addFacilityPhoto = FrontEndHelper.CreateButton(180, 40, "Add Facility Photo");
+                addFacilityPhoto.Margin = new Thickness(0.025 * cardWidth, 0, 0, 0);
+                addFacilityPhoto.Tag = hotel;
+                addFacilityPhoto.Click += AddFacilityPhoto_Click;
+                Grid.SetColumn(addFacilityPhoto, 2);
+                buttonsGrid.Children.Add(addFacilityPhoto);
+
+                Button addMealPlanButton = FrontEndHelper.CreateButton(160, 40, "Add meal plan");
+                addMealPlanButton.Margin = new Thickness(0.025 * cardWidth, 0, 0, 0);
+                Grid.SetColumn(addMealPlanButton, 3);
+                buttonsGrid.Children.Add(addMealPlanButton);
+                
                 //add expander
                 Expander moreDataExpander = new Expander
                 {
@@ -167,16 +191,21 @@ namespace Trivago.Front_End
                 MealsTab.Content = MealsPanel;
                 moreDataTabs.Items.Add(MealsTab);
 
+                ListBox mealsPlanListBox = new ListBox
+                {
+                    Width = cardWidth
+                };
+                MealsPanel.Children.Add(mealsPlanListBox);
 
                 for (int j = 0; j < hotel.mealPlans.Count; j++)
                 {
                     MealPlan mealPlan = hotel.mealPlans[j];
-                    Label mealPlanLabel = new Label
+                    ListBoxItem mealPlanItem = new ListBoxItem
                     {
                         Content = mealPlan,
                         FontSize = 22,
                     };
-                    MealsPanel.Children.Add(mealPlanLabel);
+                    mealsPlanListBox.Items.Add(mealPlanItem);
                 }
 
                 //add hotel facilities
@@ -194,6 +223,63 @@ namespace Trivago.Front_End
                 foreach (HotelFacility facility in hotel.facilities)
                     images.Add(facility.image);
                 ImageAlbum hotelAlbum = new ImageAlbum(hotelPhotosCanvas, 25, 25, 250, 250, images);
+            }
+        }
+
+        private void AddFacilityPhoto_Click(object sender, RoutedEventArgs e)
+        {
+            Button addPhotoButton = (Button)sender;
+            Hotel hotel = (Hotel)addPhotoButton.Tag;
+
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = "JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif|PNG Files (*.png)|*.png",
+                Title = "Select Hotel Photo"
+            };
+            dlg.ShowDialog();
+
+            if (dlg.FileName == "")
+            {
+                MessageBox.Show("Please select photo");
+                return;
+            }
+        }
+
+        private void UpdatePhotoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button updateButton = (Button)sender;
+            Hotel hotel = (Hotel)updateButton.Tag;
+
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = "JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif|PNG Files (*.png)|*.png",
+                Title = "Select Hotel Photo"
+            };
+            dlg.ShowDialog();
+
+            if(dlg.FileName == "")
+            {
+                MessageBox.Show("Please select photo");
+                return;
+            }
+
+            hotel.image = new CustomImage(dlg.FileName);
+            DataModels.GetInstance().UpdateHotel(hotel);
+        }
+
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button deleteButton = (Button)sender;
+            Hotel hotel = (Hotel)deleteButton.Tag;
+            
+            if(MessageBox.Show($"Are you sure to delete {hotel.name} ?", "Question", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                //Todo: delete from database
+                Admin_window admin_Window = FrontEndHelper.GetAdminWindow();
+                if (admin_Window.currentCanvas != null)
+                    admin_Window.currentCanvas.Hide();
+
+                admin_Window.InitializeHotelsCanvas(DataModels.GetInstance().GetAllHotels());
             }
         }
     }
